@@ -4,60 +4,64 @@ import { fetchBookingsFromService } from './service';
 const DATA_TTL = 1000 * 60 * 5; // 5分钟
 
 export const getBookingData = async (forceRefresh = false) => {
-  const cache = await getBookingCache();
-
+  const cache = await getBookingCache();  // 获取缓存数据
   const now = Date.now();
-  const isCacheValid = cache && (now - cache.timestamp < DATA_TTL);
+  const isCacheValid = cache && (now - cache.timestamp < DATA_TTL); // 判断缓存是否有效
+
+  // 如果缓存有效且没有强制刷新，直接返回缓存数据
+  if (isCacheValid && !forceRefresh) {
+    return cache.data;
+  }
 
   try {
-    // 从服务获取新数据
+    // 从服务器获取新数据
     const result = await fetchBookingsFromService();
 
-    // 如果缓存数据存在且有效期内
-    let mergedData;
+    // 合并缓存数据和新数据
+    const mergedData = mergeBookingData(cache?.data, result.data);
 
-    if (isCacheValid) {
-      const cacheSegmentsLength = cache.data?.segments?.length || 0;
-      const resultSegmentsLength = result.data?.segments?.length || 0;
-
-      if (resultSegmentsLength < cacheSegmentsLength) {
-        // 如果新数据的 segments 更短，直接返回新数据
-        mergedData = result.data;
-      } else {
-        // 如果新数据的 segments 更长，进行拼接
-        mergedData = {
-          ...result.data,
-          segments: [
-            ...cache.data.segments,
-            ...result.data.segments.filter(
-              (newSegment) =>
-                !cache.data.segments.some(
-                  (existingSegment) => existingSegment.id === newSegment.id
-                )
-            ),
-          ], // 合并 segments
-        };
-      }
-    } else {
-      // 如果缓存无效，直接使用新数据
-      mergedData = result.data;
-    }
-
-
-    // 保存合并后的数据到缓存
+    // 保存新数据到缓存
     await saveBookingCache({
       timestamp: now, // 更新缓存时间戳
-      data: mergedData, // 保存合并后的数据
+      data: mergedData, // 保存新数据
     });
 
-    // 返回合并后的数据
     return mergedData;
+
   } catch (error) {
     console.error('获取数据失败:', error);
-    // 如果获取新数据失败，则返回缓存数据
+
+    // 如果获取新数据失败，返回缓存数据（如果缓存数据存在）
     return cache?.data ?? [];
   }
 };
+
+// 合并缓存数据和新数据
+const mergeBookingData = (cacheData, newData) => {
+  if (!cacheData) {
+    return newData; // 如果没有缓存数据，直接返回新数据
+  }
+
+  // 合并 segments 数组，避免重复
+  const mergedSegments = [
+    ...cacheData.segments,
+    ...newData.segments.filter(
+      newSegment => !cacheData.segments.some(
+        cacheSegment => cacheSegment.id === newSegment.id
+      )
+    )
+  ];
+
+  // 返回合并后的数据
+  return {
+    ...cacheData,
+    ...newData,
+    segments: mergedSegments
+  };
+};
+
+
+
 
 
 

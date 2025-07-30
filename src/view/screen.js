@@ -14,10 +14,11 @@ const Screen = () => {
   const [data, setData] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadData = async () => {
-    const bookingData = await getBookingData(); // 实际数据请求方法
-    setData(bookingData);
+  const loadData = async (forceRefresh = false) => {
+    const bookingData = await getBookingData(forceRefresh);  // 获取数据，传入 forceRefresh 参数
+    setData(bookingData);  // 更新状态
     console.log('Booking Data:', bookingData);
+
   };
 
   useEffect(() => {
@@ -27,7 +28,7 @@ const Screen = () => {
   // 下拉刷新处理函数
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadData(); // 重新加载数据
+    await loadData(true); // 重新加载数据
     setIsRefreshing(false);
   };
 
