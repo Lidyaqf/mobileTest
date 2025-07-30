@@ -6,7 +6,14 @@ const DATA_TTL = 1000 * 60 * 5; // 5分钟
 export const getBookingData = async (forceRefresh = false) => {
   const cache = await getBookingCache();  // 获取缓存数据
   const now = Date.now();
-  const isCacheValid = cache && (now - cache.timestamp < DATA_TTL); // 判断缓存是否有效
+  // 判断缓存是否在本地时间限制内以及未超过数据本身的有效期
+  const isCacheValid = cache &&
+    (now - cache.timestamp < DATA_TTL) &&
+    cache.data?.expiryTime &&
+    now < Number(cache.data.expiryTime) * 1000; // 转换为毫秒
+
+
+    console.log('90===', isCacheValid)
 
   // 如果缓存有效且没有强制刷新，直接返回缓存数据
   if (isCacheValid && !forceRefresh) {

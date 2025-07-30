@@ -1,29 +1,37 @@
-import { useEffect, useState } from 'react';
-import { Linking, SafeAreaView, Text, TouchableOpacity } from 'react-native';
-import { getBookingData } from '../data/provider';
-
-import { View } from 'react-native';
-
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet
+  Alert,
+  Linking, RefreshControl, SafeAreaView, ScrollView,
+  StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
+import { getBookingData } from '../data/provider';
 
 const Screen = () => {
   const [data, setData] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  const navigation = useNavigation();
   const loadData = async (forceRefresh = false) => {
-    const bookingData = await getBookingData(forceRefresh);  // 获取数据，传入 forceRefresh 参数
-    setData(bookingData);  // 更新状态
-    console.log('Booking Data:', bookingData);
-
+    try {
+      const bookingData = await getBookingData(forceRefresh);
+      setData(bookingData);
+      console.log('Booking Data:', bookingData);
+    } catch (error) {
+      Alert.alert(
+        '加载失败',
+        '获取数据失败，请检查网络或稍后重试。',
+        [{ text: '确定' }]
+      );
+    }
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // 每次渲染时候执行
+  useFocusEffect(
+    useCallback(() => {
+      console.log('999==')
+      loadData(); // 页面每次获得焦点时调用
+    }, [])
+  );
 
   // 下拉刷新处理函数
   const handleRefresh = async () => {
@@ -57,6 +65,7 @@ const Screen = () => {
           />
         }
       >
+          {/* <Button title="跳转到 Other 页面" onPress={() => navigation.navigate('Other')} /> */}
         <View style={styles.card}>
           <Text style={styles.title}>🎉 Booking Confirmed</Text>
           <Text style={styles.label}>Ship Reference:</Text>
