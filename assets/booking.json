@@ -16,14 +16,14 @@
                     "displayName": "BBB DisplayName",
                     "url": "www.ship.com"
                 },
-                "destinationCity": "AAA",
+                "destinationCity": "BBB",
                 "origin":
                 {
                     "code": "AAA",
                     "displayName": "AAA DisplayName",
                     "url": "www.ship.com"
                 },
-                "originCity": "BBB"
+                "originCity": "AAA"
             }
         },
         {
@@ -46,5 +46,6 @@
                 "originCity": "BBB"
             }
         }
+       
     ]
 }
